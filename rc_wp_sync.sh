@@ -20,18 +20,18 @@ read project_name
 
 rc_uuid=$(date '+%Y-%m-%d-%H-%M-%S')-$( cat /proc/sys/kernel/random/uuid )
 
-sudo ssh lolly 'bash -s' << EOF
+sudo ssh $project_name 'bash -s' << EOF
 
-cd /bitnami/wordpress
+cd /var/www/$project_name
 sudo wp db export $rc_uuid.sql
 
 EOF
 
 sudo scp $project_name:/bitnami/wordpress/$rc_uuid.sql /var/www/$project_name/
 
-sudo ssh lolly 'bash -s' << EOF
+sudo ssh $project_name 'bash -s' << EOF
 
-cd /bitnami/wordpress
+cd /var/www/$project_name
 sudo rm $rc_uuid.sql
 
 EOF
