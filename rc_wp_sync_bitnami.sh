@@ -53,6 +53,6 @@ wp search-replace "http://$project_root_domain" "http://$project_local_domain" -
 sudo rsync -a $project_name:/bitnami/wordpress/wp-content/uploads/ /var/www/lolly/wp-content/uploads/
 sudo chown -R www-data:www-data wp-content
 
-
+sudo wp option set blog_public 0 --allow-root
 
 
