@@ -1,41 +1,92 @@
 #!/bin/bash
 
-echo "enter the project name:"
-read project_name
+echo "enter the local project name: "; read project_name
+
+echo "is /var/www/${project_name} the root local folder? ( y/n ): "; read local_root_yn
+
+if [ "$local_root_yn" = "${local_root_yn#[Yy]}" ]
+then
+    local_root=/var/www/$project_name
+else
+    echo "enter the local root folder path ( eg: /var/www/example) :"; read local_root
+fi 
+
+echo "is remote a prod or dev server? ( prod/dev ): "; read server
+
+if [[ -f $local_root/$project_name-$server.sh ]]
+then
+    . $local_root/$project_name-$server.sh
+else
+    echo "is ${project_name} the remote ssh host? ( y/n ): "; read ssh_host_yn
+
+    if [ "$ssh_host_yn" = "${ssh_host_yn#[Yy]}" ]
+    then
+        ssh_host=$project_name
+    else
+        echo "enter the remote ssh host :"; read ssh_host
+    fi
+
+    echo "is /var/www/${project_name} the root remote folder? ( y/n ): "; read remote_root_yn
+
+    if [ "$remote_root_yn" = "${remote_root_yn#[Yy]}" ]
+    then
+        remote_root=/var/www/$project_name
+    else
+        echo "enter the local root folder path ( eg: /var/www/example/) :"; read remote_root
+    fi
+
+sudo touch $local_root/$project_name-$server.sh
+
+sudo cat > $local_root/$project_name-$server.sh << EOF
+    ssh_host=$ssh_host
+    remote_root=$remote_root
+EOF
+
+fi
+
+
 
 rc_uuid=$(date '+%Y-%m-%d-%H-%M-%S')-$( cat /proc/sys/kernel/random/uuid )
 
-sudo ssh $project_name 'bash -s' << EOF
+sudo ssh $ssh_host /bin/bash << EOF
 
-cd /var/www/$project_name
+cd $remote_root
 sudo wp db export $rc_uuid.sql --allow-root
 
 EOF
 
-sudo scp $project_name:/var/www/$project_name/$rc_uuid.sql /var/www/$project_name/
+sudo scp $ssh_host:$remote_root/$rc_uuid.sql $local_root
 
-sudo ssh $project_name 'bash -s' << EOF
+sudo ssh $ssh_host /bin/bash << EOF
 
-cd /var/www/$project_name
+cd $remote_root
 sudo rm $rc_uuid.sql
 
 EOF
 
-cd /var/www/$project_name/
+cd $local_root
 
 echo "enter the project remote domain ( Example example.com):"
-read project_root_domain
+read project_remote_domain
 echo "enter the project local domain with port ( Example localhost:8080):"
 read project_local_domain
 
 wp db import $rc_uuid.sql --allow-root
 
-wp search-replace "https://www.$project_root_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
-wp search-replace "http://www.$project_root_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
-wp search-replace "https://$project_root_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
-wp search-replace "http://$project_root_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
+wp search-replace "https://www.$project_remote_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
+wp search-replace "http://www.$project_remote_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
+wp search-replace "https://$project_remote_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
+wp search-replace "http://$project_remote_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
 
-sudo rsync -a lolly:/bitnami/wordpress/wp-content/uploads/ /var/www/lolly/wp-content/uploads/
+echo "Press 'y' to wp-content all items inside folder. Press 'n' to only sync uploads folder : "; read sync_folder_yn
+
+if [ "$sync_folder_yn" = "${sync_folder_yn#[Yy]}" ]
+then
+    sudo rsync -a $ssh_host:$remote_root/wp-content/ $local_root/wp-content/
+else
+    sudo rsync -a $ssh_host:$remote_root/wp-content/uploads/ $local_root/wp-content/uploads/
+fi 
+
 sudo chown -R www-data:www-data wp-content
 sudo wp option set blog_public 0 --allow-root
 
