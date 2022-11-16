@@ -35,7 +35,16 @@ sudo wp search-replace "http://www.$project_root_domain" "http://$project_local_
 sudo wp search-replace "https://$project_root_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
 sudo wp search-replace "http://$project_root_domain" "http://$project_local_domain" --skip-columns=guid --allow-root
 
-sudo rsync -a $project_name:/bitnami/wordpress/wp-content/uploads/ /var/www/$project_name/wp-content/uploads/
+
+echo "Press 'y' to wp-content all items inside folder. Press 'n' to only sync uploads folder : "; read sync_folder_yn
+
+if [ "$sync_folder_yn" = "${sync_folder_yn#[Yy]}" ]
+then
+    sudo rsync -a $project_name:/bitnami/wordpress/wp-content/ /var/www/$project_name/wp-content/
+else
+    sudo rsync -a $project_name:/bitnami/wordpress/wp-content/uploads/ /var/www/$project_name/wp-content/uploads/
+fi 
+
 sudo chown -R www-data:www-data wp-content
 
 sudo wp option set blog_public 0 --allow-root
