@@ -38,7 +38,7 @@ sudo wp search-replace "http://$project_root_domain" "http://$project_local_doma
 
 echo "Press 'y' to wp-content all items inside folder. Press 'n' to only sync uploads folder : "; read sync_folder_yn
 
-if [ "$sync_folder_yn" = "${sync_folder_yn#[Yy]}" ]
+if [ "$sync_folder_yn" = "${sync_folder_yn#[y]}" ]
 then
     sudo rsync -a $project_name:/bitnami/wordpress/wp-content/ /var/www/$project_name/wp-content/
 else

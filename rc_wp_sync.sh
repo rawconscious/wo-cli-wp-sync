@@ -4,7 +4,7 @@ echo "enter the local project name: "; read project_name
 
 echo "is /var/www/${project_name} the root local folder? ( y/n ): "; read local_root_yn
 
-if [ "$local_root_yn" = "${local_root_yn#[Yy]}" ]
+if [ "$local_root_yn" = "y" ]
 then
     local_root=/var/www/$project_name
 else
@@ -19,7 +19,7 @@ then
 else
     echo "is ${project_name} the remote ssh host? ( y/n ): "; read ssh_host_yn
 
-    if [ "$ssh_host_yn" = "${ssh_host_yn#[Yy]}" ]
+    if [ "$ssh_host_yn" = "y" ]
     then
         ssh_host=$project_name
     else
@@ -28,11 +28,11 @@ else
 
     echo "is /var/www/${project_name} the root remote folder? ( y/n ): "; read remote_root_yn
 
-    if [ "$remote_root_yn" = "${remote_root_yn#[Yy]}" ]
+    if [ "$remote_root_yn" = "y" ]
     then
         remote_root=/var/www/$project_name
     else
-        echo "enter the local root folder path ( eg: /var/www/example/) :"; read remote_root
+        echo "enter the remote root folder path ( eg: /var/www/example/) :"; read remote_root
     fi
 
 sudo touch $local_root/$project_name-$server.sh
@@ -80,7 +80,7 @@ wp search-replace "http://$project_remote_domain" "http://$project_local_domain"
 
 echo "Press 'y' to wp-content all items inside folder. Press 'n' to only sync uploads folder : "; read sync_folder_yn
 
-if [ "$sync_folder_yn" = "${sync_folder_yn#[Yy]}" ]
+if [ "$sync_folder_yn" = "y" ]
 then
     sudo rsync -a $ssh_host:$remote_root/wp-content/ $local_root/wp-content/
 else
